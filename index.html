@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SokuDoku - 縦型動画作成Webアプリケーション</title>
+  <link rel="stylesheet" href="./index.css">
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <span class="logo-icon">⚡</span> SokuDoku
+    </div>
+    <div style="font-size: 0.85rem; color: var(--text-secondary);">
+      Client-Side Vertical Video Generator (v5)
+    </div>
+  </header>
+
+  <main>
+    <!-- Left Sidebar: Controls -->
+    <div class="sidebar">
+      
+      <!-- 1. Text Tags Input Card -->
+      <div class="card">
+        <div class="card-title">
+          <span>📝</span> テキスト設定 (疑似Markdown)
+        </div>
+        <div class="form-group">
+          <label for="markupText">疑似Markdownテキスト</label>
+          <textarea id="markupText" placeholder="XML風タグでテキストを入力してください...">
+<top1>速読チャレンジ CEFR B1</top1>
+<top2>全文読めたら90WPM</top2>
+<title>The Power of Habits</title>
+<text>
+Habits are powerful forces in our lives.
+They shape our daily routines.
+They determine our long-term outcomes.
+Building good habits takes time.
+It requires consistent effort every day.
+Small actions accumulate over time.
+They lead to massive transformations.
+Start small, stay consistent, and watch your life change.
+</text>
+<bottom1>復習用に保存</bottom1>
+<word1>accumulate</word1>
+<mean1>蓄積する、積み重なる</mean1>
+<word2>routine</word2>
+<mean2>日課、お決まりの手順</mean2>
+<word3>transformation</word3>
+<mean3>変化、変形</mean3>
+          </textarea>
+        </div>
+      </div>
+
+      <!-- 2. Media Uploads Card -->
+      <div class="card">
+        <div class="card-title">
+          <span>🖼️</span> メディア素材設定
+        </div>
+        
+        <div class="form-group">
+          <label>背景画像 (推奨: 1080x1920)</label>
+          <div class="file-input-wrapper">
+            <label for="bgImageInput" class="file-input-btn" id="bgImageBtn">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+              <span>背景画像を選択</span>
+            </label>
+            <input type="file" id="bgImageInput" accept="image/*">
+            <span class="file-info" id="bgImageInfo">背景画像が未設定です。デフォルトの背景が使用されます。</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>BGM音源 (MP3 - IndexedDBに自動保存されます)</label>
+          <div class="file-input-wrapper">
+            <label for="bgmAudioInput" class="file-input-btn" id="bgmAudioBtn">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              <span>BGMファイルを選択</span>
+            </label>
+            <input type="file" id="bgmAudioInput" accept="audio/mp3, audio/*">
+            <span class="file-info" id="bgmAudioInfo">BGMが未設定です。</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>音読音声 (MP3 / WAV)</label>
+          <div class="file-input-wrapper">
+            <label for="voiceAudioInput" class="file-input-btn" id="voiceAudioBtn">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+              <span>音読音声を選択</span>
+            </label>
+            <input type="file" id="voiceAudioInput" accept="audio/*">
+            <span class="file-info" id="voiceAudioInfo">音読音声が未設定です。</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Mode and Options Card -->
+      <div class="card">
+        <div class="card-title">
+          <span>⚙️</span> 再生・スクロールモード設定
+        </div>
+        
+        <div class="tabs">
+          <button type="button" class="tab active" id="tabNormal">通常モード</button>
+          <button type="button" class="tab" id="tabTimestamp">タイムスタンプ同期</button>
+        </div>
+
+        <!-- Tab 1: Normal Mode Controls -->
+        <div id="normalModeSection">
+          <div class="form-group">
+            <label for="normalDuration">フェーズ1 再生時間 (秒)</label>
+            <input type="number" id="normalDuration" value="60" min="5" max="300">
+          </div>
+        </div>
+
+        <!-- Tab 2: Timestamp Mode Controls -->
+        <div id="timestampModeSection" style="display: none;">
+          <div class="form-group">
+            <label for="timestampInput">タイムスタンプ (分:秒 テキスト)</label>
+            <textarea id="timestampInput" class="textarea-small" placeholder="例: 0:00 Habits are...
+0:04 They shape...
+0:08 They determine...">0:00 Habits are powerful forces in our lives.
+0:04 They shape our daily routines.
+0:08 They determine our long-term outcomes.
+0:12 Building good habits takes time.
+0:16 It requires consistent effort every day.
+0:20 Small actions accumulate over time.
+0:24 They lead to massive transformations.
+0:28 Start small, stay consistent, and watch your life change.</textarea>
+            <button type="button" class="btn-secondary" id="btnAutoTimestamp" style="font-size: 0.85rem; padding: 0.5rem; margin-top: 0.5rem; display: none; width: 100%;">
+              <span>音読音声の長さからタイムスタンプを自動均等割付</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mix settings shared -->
+        <div class="form-group" style="margin-top: 1rem;">
+          <label for="bgmVolume">BGM音量比率</label>
+          <div class="slider-group">
+            <input type="range" id="bgmVolume" min="0" max="1" step="0.05" value="1">
+            <span class="slider-value" id="bgmVolumeVal">100%</span>
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem; display: block;" id="bgmVolumeNotice">
+            ※ 音読音声が指定されている場合、初期音量は自動的に70%になります。
+          </span>
+        </div>
+      </div>
+
+      <!-- 4. Export Card -->
+      <div class="card" style="margin-bottom: 2rem;">
+        <div class="card-title">
+          <span>🎬</span> 動画エクスポート
+        </div>
+        <div class="btn-container">
+          <button class="btn-primary" id="btnExportInstagram">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+            <span>Instagram用MP4を書き出し</span>
+          </button>
+          
+          <button class="btn-primary" id="btnExportYoutube" style="background: var(--accent-red); box-shadow: 0 4px 15px rgba(255, 23, 68, 0.35);">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>
+            <span>YouTube用MP4を書き出し</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Area: Preview Screen -->
+    <div class="preview-container">
+      <div class="canvas-wrapper">
+        <canvas id="previewCanvas" width="1080" height="1920"></canvas>
+      </div>
+
+      <!-- Platform Preview Tabs -->
+      <div class="tabs" style="width: 100%; max-width: 450px; margin-top: 1rem; margin-bottom: 0.5rem;">
+        <button type="button" class="tab active" id="tabPreviewInstagram">Instagram プレビュー</button>
+        <button type="button" class="tab" id="tabPreviewYoutube">YouTube プレビュー</button>
+      </div>
+
+      <!-- Video Player Control UI -->
+      <div class="player-controls">
+        <div class="progress-bar-wrapper" id="progressWrapper">
+          <div class="progress-bar-fill" id="progressFill"></div>
+        </div>
+
+        <div class="control-buttons">
+          <div class="control-buttons-left">
+            <button class="control-btn" id="btnPlayPause" title="再生 / 一時停止">
+              <!-- Play Icon SVG -->
+              <svg id="playIcon" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              <!-- Pause Icon SVG (hidden by default) -->
+              <svg id="pauseIcon" style="display: none;" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            </button>
+            
+            <button class="control-btn" id="btnMute" title="ミュート">
+              <!-- Unmuted Icon SVG -->
+              <svg id="soundOnIcon" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+              <!-- Muted Icon SVG (hidden by default) -->
+              <svg id="soundOffIcon" style="display: none;" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" x2="1" y1="1" y2="23"/></svg>
+            </button>
+          </div>
+
+          <div class="time-display" id="timeDisplay">
+            00:00 / 01:05
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Exporting Overlay -->
+  <div class="overlay" id="exportOverlay">
+    <div class="overlay-content" id="exportLoadingState">
+      <div class="spinner"></div>
+      <div class="overlay-title">動画を生成中...</div>
+      <div class="overlay-status" id="exportStatusText">フレームをレンダリングしています (0/0)</div>
+      <div class="export-progress-bar">
+        <div class="export-progress-fill" id="exportProgressFill"></div>
+      </div>
+      <button class="btn-secondary" id="btnCancelExport" style="margin-top: 1rem;">キャンセル</button>
+    </div>
+
+    <div class="overlay-content" id="exportSuccessState" style="display: none;">
+      <div class="export-success-icon">✓</div>
+      <div class="overlay-title">エクスポート完了！</div>
+      <div class="overlay-status">動画のダウンロードが開始されました。</div>
+      
+      <!-- Mobile Save Guide (Shown especially on iOS Safari) -->
+      <div class="mobile-save-guide">
+        <p>📱 スマートフォン（特に iOS Safari）をお使いの方へ</p>
+        <ol>
+          <li>自動ダウンロードが開始されない場合は、画面下の「共有」ボタンをタップします。</li>
+          <li>「ファイルに保存」を選択して、端末内のファイルアプリに保存してください。</li>
+          <li>または、写真アプリに直接保存したい場合は「ビデオを保存」をタップします。</li>
+        </ol>
+      </div>
+
+      <button class="btn-primary" id="btnCloseOverlay" style="margin-top: 1rem;">閉じる</button>
+    </div>
+  </div>
+
+  <!-- Vite module script -->
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
