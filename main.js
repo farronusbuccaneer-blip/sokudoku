@@ -845,10 +845,146 @@ async function renderOfflineAudio() {
   return await offlineCtx.startRendering();
 }
 
+// Real-time Export Fallback using MediaRecorder (for browsers/in-app browsers without WebCodecs support)
+async function exportVideoRealTime(platform) {
+  exportCancelled = false;
+  btnExportInstagram.disabled = true;
+  btnExportYoutube.disabled = true;
+  exportOverlay.classList.add('active');
+  exportLoadingState.style.display = 'flex';
+  exportSuccessState.style.display = 'none';
+  exportStatusText.textContent = "リアルタイム録画でエクスポート中...";
+  exportProgressFill.style.width = "0%";
+
+  try {
+    initAudioCtx();
+    if (audioCtx.state === 'suspended') {
+      await audioCtx.resume();
+    }
+
+    const fps = 30;
+    const canvasStream = previewCanvas.captureStream ? previewCanvas.captureStream(fps) : previewCanvas.mozCaptureStream(fps);
+    const mixedStream = new MediaStream();
+    
+    // Add video track
+    mixedStream.addTrack(canvasStream.getVideoTracks()[0]);
+
+    // Capture Audio if present
+    let mediaRecorder = null;
+    let audioDestNode = null;
+    
+    const hasAudio = bgmBuffer || voiceBuffer;
+    if (hasAudio) {
+      audioDestNode = audioCtx.createMediaStreamDestination();
+      bgmGainNode.connect(audioDestNode);
+      voiceGainNode.connect(audioDestNode);
+      mixedStream.addTrack(audioDestNode.stream.getAudioTracks()[0]);
+    }
+
+    // Set MIME types and fallbacks (Varying by mobile devices/Safari/Chrome)
+    let options = { mimeType: 'video/mp4; codecs="avc1.424028, mp4a.40.2"' };
+    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+      options = { mimeType: 'video/mp4' };
+    }
+    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+      options = { mimeType: 'video/webm; codecs=vp9' };
+    }
+    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+      options = { mimeType: 'video/webm' };
+    }
+
+    mediaRecorder = new MediaRecorder(mixedStream, options);
+    const chunks = [];
+    
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) {
+        chunks.push(e.data);
+      }
+    };
+
+    mediaRecorder.onstop = () => {
+      if (audioDestNode) {
+        bgmGainNode.disconnect(audioDestNode);
+        voiceGainNode.disconnect(audioDestNode);
+      }
+
+      if (exportCancelled) {
+        btnExportInstagram.disabled = false;
+        btnExportYoutube.disabled = false;
+        return;
+      }
+
+      const blob = new Blob(chunks, { type: mediaRecorder.mimeType });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      const suffix = platform === 'instagram' ? 'insta' : 'youtube';
+      const extension = mediaRecorder.mimeType.includes('mp4') ? 'mp4' : 'webm';
+      a.download = `${parsedTags.title || 'video'}_${suffix}.${extension}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      exportLoadingState.style.display = 'none';
+      exportSuccessState.style.display = 'flex';
+      
+      btnExportInstagram.disabled = false;
+      btnExportYoutube.disabled = false;
+    };
+
+    // Start Recording and Playback
+    mediaRecorder.start();
+    
+    currentTime = 0;
+    startRealTimeAudio(0);
+    
+    const startTime = performance.now();
+    
+    const recordLoop = () => {
+      if (exportCancelled) {
+        mediaRecorder.stop();
+        stopRealTimeAudio();
+        return;
+      }
+
+      const elapsed = (performance.now() - startTime) / 1000;
+      currentTime = Math.min(elapsed, totalDuration);
+      
+      // Update UI
+      exportProgressFill.style.width = `${Math.round((currentTime / totalDuration) * 100)}%`;
+      exportStatusText.textContent = `録画中... ${Math.round(currentTime)}秒 / ${Math.round(totalDuration)}秒`;
+
+      drawCanvas(currentTime, platform);
+
+      if (currentTime >= totalDuration) {
+        mediaRecorder.stop();
+        stopRealTimeAudio();
+      } else {
+        requestAnimationFrame(recordLoop);
+      }
+    };
+
+    requestAnimationFrame(recordLoop);
+
+  } catch (err) {
+    console.error("Real-time export failed:", err);
+    alert(`エクスポートに失敗しました: ${err.message}`);
+    exportOverlay.classList.remove('active');
+    btnExportInstagram.disabled = false;
+    btnExportYoutube.disabled = false;
+  }
+}
+
 // Video Export logic (WebCodecs + Muxer)
 async function exportVideo(platform = currentPlatform) {
-  if (typeof VideoEncoder === 'undefined') {
-    alert("お使いのブラウザはWebCodecsビデオエンコーダをサポートしていません。Chrome、Edge、またはiOS 16.4以降のSafariをご使用ください。");
+  const hasAudio = bgmBuffer || voiceBuffer;
+  const canEncodeAudio = typeof AudioEncoder !== 'undefined';
+  
+  // Fall back to MediaRecorder if WebCodecs video is missing OR if we have audio but cannot encode it (e.g. mobile Safari)
+  if (typeof VideoEncoder === 'undefined' || (hasAudio && !canEncodeAudio)) {
+    console.log("Using MediaRecorder fallback for export.");
+    exportVideoRealTime(platform);
     return;
   }
 
@@ -1066,8 +1202,12 @@ function switchTab(activeTab, inactiveTab, showSection, hideSection) {
   drawCanvas(0);
 }
 
-// Event Listeners
-window.addEventListener('DOMContentLoaded', async () => {
+// Initialization function
+async function initApp() {
+  // Parse elements and calculate initial layout
+  calculateLayout();
+  drawCanvas(0);
+
   // Load BGM from IndexedDB if it exists
   try {
     const bgmData = await loadBGMFromStore();
@@ -1076,7 +1216,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       bgmAudioInfo.textContent = `保存データからロード: ${bgmName}`;
       bgmAudioBtn.classList.add('has-file');
       
-      // Decode audio buffer in a dummy AudioContext (will initialize context)
+      // Decode audio buffer in a temporary AudioContext
       const tempCtx = new (window.AudioContext || window.webkitAudioContext)();
       bgmBuffer = await decodeAudioDataSafe(tempCtx, bgmData.arrayBuffer);
       tempCtx.close();
@@ -1087,10 +1227,14 @@ window.addEventListener('DOMContentLoaded', async () => {
   } catch (err) {
     console.warn("Failed to load stored BGM:", err);
   }
+}
 
-  calculateLayout();
-  drawCanvas(0);
-});
+// Robust DOMContentLoaded handler for ES Modules / Vite
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 
 // Text Area triggers recalculation
 markupTextArea.addEventListener('input', () => {
