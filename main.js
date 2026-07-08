@@ -544,9 +544,9 @@ function drawCanvas(time, platform = currentPlatform) {
       ctx.strokeText('↗', 820, 1670);
       ctx.fillText('↗', 820, 1670);
     } else {
-      // YouTube Phase 1: "復習のため保存" centered at x = 540, y = 1670 (increased size)
-      const text = parsedTags.bottom1 || '復習のため保存';
-      ctx.font = "900 68px 'Outfit', 'Noto Sans JP', sans-serif";
+      // YouTube Phase 1: "高評価・チャンネル登録お願いします！" centered at x = 540, y = 1670 (increased size)
+      const text = "高評価・チャンネル登録お願いします！";
+      ctx.font = "900 60px 'Outfit', 'Noto Sans JP', sans-serif";
       ctx.fillStyle = '#FFFFFF';
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 16;
@@ -604,14 +604,23 @@ function drawCanvas(time, platform = currentPlatform) {
   } else {
     // Phase 2: Word Explanations
     
-    // Upper (increased font size to 72px)
+    // Upper Title (moved up to y = 145)
     ctx.font = "900 72px 'Outfit', 'Noto Sans JP', sans-serif";
     ctx.fillStyle = '#FFFFFF';
     ctx.strokeStyle = '#000000';
     ctx.lineWidth = 16;
     ctx.lineJoin = 'round';
-    ctx.strokeText("今日の高レベルな単語", 540, 192);
-    ctx.fillText("今日の高レベルな単語", 540, 192);
+    ctx.strokeText("今日の高レベルな単語", 540, 145);
+    ctx.fillText("今日の高レベルな単語", 540, 145);
+
+    // Upper Subtitle CTA (added underneath at y = 260)
+    ctx.font = "900 40px 'Outfit', 'Noto Sans JP', sans-serif";
+    ctx.fillStyle = '#FFD54F'; // gold/yellow
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 10;
+    ctx.lineJoin = 'round';
+    ctx.strokeText("ゆっくり読みたい方はプロフからnoteへ！", 540, 260);
+    ctx.fillText("ゆっくり読みたい方はプロフからnoteへ！", 540, 260);
     
     // Draw Lower Fixed Content for Phase 2
     if (platform === 'instagram') {
