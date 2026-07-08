@@ -527,7 +527,7 @@ function drawCanvas(time, platform = currentPlatform) {
     
     // Draw Lower Fixed Content
     if (platform === 'instagram') {
-      // Instagram Phase 1: "復習のため保存" centered, large font + arrow pointing up-right
+      // Instagram Phase 1: "復習のため保存" centered at x = 500, y = 1680 + arrow ↗
       const text = parsedTags.bottom1 || '復習のため保存';
       ctx.font = "900 56px 'Outfit', 'Noto Sans JP', sans-serif";
       ctx.fillStyle = '#FFFFFF';
@@ -535,26 +535,37 @@ function drawCanvas(time, platform = currentPlatform) {
       ctx.lineWidth = 14;
       ctx.lineJoin = 'round';
       
-      // Draw text centered at x = 500, y = 1728
       ctx.textAlign = 'center';
-      ctx.strokeText(text, 500, 1728);
-      ctx.fillText(text, 500, 1728);
+      ctx.strokeText(text, 500, 1680);
+      ctx.fillText(text, 500, 1680);
       
-      // Draw arrow ↗ centered at x = 820, y = 1728 (points exactly to Instagram save button)
+      // Draw arrow ↗ centered at x = 820, y = 1680
       ctx.font = "900 68px 'Outfit', 'Noto Sans JP', sans-serif";
-      ctx.strokeText('↗', 820, 1728);
-      ctx.fillText('↗', 820, 1728);
+      ctx.strokeText('↗', 820, 1680);
+      ctx.fillText('↗', 820, 1680);
     } else {
-      // YouTube Phase 1: "チャンネル登録・高評価お願いします🍀"
+      // YouTube Phase 1: "復習のため保存" centered at x = 540, y = 1680
+      const text = parsedTags.bottom1 || '復習のため保存';
       ctx.font = "900 56px 'Outfit', 'Noto Sans JP', sans-serif";
       ctx.fillStyle = '#FFFFFF';
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 14;
       ctx.lineJoin = 'round';
       ctx.textAlign = 'center';
-      ctx.strokeText("チャンネル登録・高評価お願いします🍀", 540, 1728);
-      ctx.fillText("チャンネル登録・高評価お願いします🍀", 540, 1728);
+      ctx.strokeText(text, 540, 1680);
+      ctx.fillText(text, 540, 1680);
     }
+
+    // Both platforms Phase 1: Draw warning subtext underneath "復習のため保存"
+    ctx.font = "900 38px 'Outfit', 'Noto Sans JP', sans-serif";
+    ctx.fillStyle = '#FFD54F'; // Emphasized gold/yellow
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 10;
+    ctx.lineJoin = 'round';
+    ctx.textAlign = 'center';
+    ctx.strokeText("💡高レベル単語の解説は最後に！", 540, 1780);
+    ctx.fillText("💡高レベル単語の解説は最後に！", 540, 1780);
+
     // Always restore alignment to center for subsequent drawings
     ctx.textAlign = 'center';
     
