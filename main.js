@@ -506,65 +506,65 @@ function drawCanvas(time, platform = currentPlatform) {
   if (isPhase1) {
     // Upper Content
     if (parsedTags.top1) {
-      ctx.font = "900 72px 'Outfit', 'Noto Sans JP', sans-serif";
+      ctx.font = "900 88px 'Outfit', 'Noto Sans JP', sans-serif";
       ctx.fillStyle = '#FFFFFF';
       ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 16;
+      ctx.lineWidth = 18;
       ctx.lineJoin = 'round';
-      ctx.strokeText(parsedTags.top1, 540, 135);
-      ctx.fillText(parsedTags.top1, 540, 135);
+      ctx.strokeText(parsedTags.top1, 540, 145);
+      ctx.fillText(parsedTags.top1, 540, 145);
     }
     
     if (parsedTags.top2) {
-      ctx.font = "700 48px 'Outfit', 'Noto Sans JP', sans-serif";
+      ctx.font = "700 60px 'Outfit', 'Noto Sans JP', sans-serif";
       ctx.fillStyle = '#FFFFFF';
       ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 12;
+      ctx.lineWidth = 14;
       ctx.lineJoin = 'round';
-      ctx.strokeText(parsedTags.top2, 540, 245);
-      ctx.fillText(parsedTags.top2, 540, 245);
+      ctx.strokeText(parsedTags.top2, 540, 260);
+      ctx.fillText(parsedTags.top2, 540, 260);
     }
     
     // Draw Lower Fixed Content
     if (platform === 'instagram') {
-      // Instagram Phase 1: "復習のため保存" centered at x = 500, y = 1680 + arrow ↗
+      // Instagram Phase 1: "復習のため保存" centered at x = 500, y = 1670 + arrow ↗ (increased size)
       const text = parsedTags.bottom1 || '復習のため保存';
-      ctx.font = "900 56px 'Outfit', 'Noto Sans JP', sans-serif";
-      ctx.fillStyle = '#FFFFFF';
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 14;
-      ctx.lineJoin = 'round';
-      
-      ctx.textAlign = 'center';
-      ctx.strokeText(text, 500, 1680);
-      ctx.fillText(text, 500, 1680);
-      
-      // Draw arrow ↗ centered at x = 820, y = 1680
       ctx.font = "900 68px 'Outfit', 'Noto Sans JP', sans-serif";
-      ctx.strokeText('↗', 820, 1680);
-      ctx.fillText('↗', 820, 1680);
-    } else {
-      // YouTube Phase 1: "復習のため保存" centered at x = 540, y = 1680
-      const text = parsedTags.bottom1 || '復習のため保存';
-      ctx.font = "900 56px 'Outfit', 'Noto Sans JP', sans-serif";
       ctx.fillStyle = '#FFFFFF';
       ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 14;
+      ctx.lineWidth = 16;
+      ctx.lineJoin = 'round';
+      
+      ctx.textAlign = 'center';
+      ctx.strokeText(text, 500, 1670);
+      ctx.fillText(text, 500, 1670);
+      
+      // Draw arrow ↗ centered at x = 820, y = 1670
+      ctx.font = "900 80px 'Outfit', 'Noto Sans JP', sans-serif";
+      ctx.strokeText('↗', 820, 1670);
+      ctx.fillText('↗', 820, 1670);
+    } else {
+      // YouTube Phase 1: "復習のため保存" centered at x = 540, y = 1670 (increased size)
+      const text = parsedTags.bottom1 || '復習のため保存';
+      ctx.font = "900 68px 'Outfit', 'Noto Sans JP', sans-serif";
+      ctx.fillStyle = '#FFFFFF';
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 16;
       ctx.lineJoin = 'round';
       ctx.textAlign = 'center';
-      ctx.strokeText(text, 540, 1680);
-      ctx.fillText(text, 540, 1680);
+      ctx.strokeText(text, 540, 1670);
+      ctx.fillText(text, 540, 1670);
     }
 
-    // Both platforms Phase 1: Draw warning subtext underneath "復習のため保存"
-    ctx.font = "900 38px 'Outfit', 'Noto Sans JP', sans-serif";
+    // Both platforms Phase 1: Draw warning subtext underneath "復習のため保存" (increased size to 48px)
+    ctx.font = "900 48px 'Outfit', 'Noto Sans JP', sans-serif";
     ctx.fillStyle = '#FFD54F'; // Emphasized gold/yellow
     ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 10;
+    ctx.lineWidth = 12;
     ctx.lineJoin = 'round';
     ctx.textAlign = 'center';
-    ctx.strokeText("💡高レベル単語の解説は最後に！", 540, 1780);
-    ctx.fillText("💡高レベル単語の解説は最後に！", 540, 1780);
+    ctx.strokeText("💡高レベル単語の解説は最後に！", 540, 1795);
+    ctx.fillText("💡高レベル単語の解説は最後に！", 540, 1795);
 
     // Always restore alignment to center for subsequent drawings
     ctx.textAlign = 'center';
@@ -615,12 +615,12 @@ function drawCanvas(time, platform = currentPlatform) {
     
     // Draw Lower Fixed Content for Phase 2
     if (platform === 'instagram') {
-      // Instagram Phase 2: Same as Phase 1 ("復習のため保存" + ↗)
+      // Instagram Phase 2: Same as Phase 1 ("復習のため保存" + ↗) (increased size)
       const text = parsedTags.bottom1 || '復習のため保存';
-      ctx.font = "900 56px 'Outfit', 'Noto Sans JP', sans-serif";
+      ctx.font = "900 68px 'Outfit', 'Noto Sans JP', sans-serif";
       ctx.fillStyle = '#FFFFFF';
       ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 14;
+      ctx.lineWidth = 16;
       ctx.lineJoin = 'round';
       
       // Draw text centered at x = 500, y = 1728
@@ -629,7 +629,7 @@ function drawCanvas(time, platform = currentPlatform) {
       ctx.fillText(text, 500, 1728);
       
       // Draw arrow ↗ centered at x = 820, y = 1728
-      ctx.font = "900 68px 'Outfit', 'Noto Sans JP', sans-serif";
+      ctx.font = "900 80px 'Outfit', 'Noto Sans JP', sans-serif";
       ctx.strokeText('↗', 820, 1728);
       ctx.fillText('↗', 820, 1728);
     } else {
