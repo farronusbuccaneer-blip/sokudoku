@@ -544,12 +544,12 @@ function drawCanvas(time, platform = currentPlatform) {
       ctx.strokeText('↗', 820, 1670);
       ctx.fillText('↗', 820, 1670);
     } else {
-      // YouTube Phase 1: "高評価・チャンネル登録お願いします！" centered at x = 540, y = 1670 (increased size)
+      // YouTube Phase 1: "高評価・チャンネル登録お願いします！" centered at x = 540, y = 1670 (size adjusted to 48px to prevent overflow)
       const text = "高評価・チャンネル登録お願いします！";
-      ctx.font = "900 60px 'Outfit', 'Noto Sans JP', sans-serif";
+      ctx.font = "900 48px 'Outfit', 'Noto Sans JP', sans-serif";
       ctx.fillStyle = '#FFFFFF';
       ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 16;
+      ctx.lineWidth = 12;
       ctx.lineJoin = 'round';
       ctx.textAlign = 'center';
       ctx.strokeText(text, 540, 1670);
