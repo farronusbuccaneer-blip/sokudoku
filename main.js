@@ -613,11 +613,11 @@ function drawCanvas(time, platform = currentPlatform) {
     ctx.strokeText("今日の高レベルな単語", 540, 145);
     ctx.fillText("今日の高レベルな単語", 540, 145);
 
-    // Upper Subtitle CTA (added underneath at y = 260)
-    ctx.font = "900 40px 'Outfit', 'Noto Sans JP', sans-serif";
+    // Upper Subtitle CTA (added underneath at y = 260) (increased size to 48px to improve visibility)
+    ctx.font = "900 48px 'Outfit', 'Noto Sans JP', sans-serif";
     ctx.fillStyle = '#FFD54F'; // gold/yellow
     ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 10;
+    ctx.lineWidth = 12;
     ctx.lineJoin = 'round';
     ctx.strokeText("ゆっくり読みたい方はプロフからnoteへ！", 540, 260);
     ctx.fillText("ゆっくり読みたい方はプロフからnoteへ！", 540, 260);
