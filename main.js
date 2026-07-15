@@ -556,15 +556,15 @@ function drawCanvas(time, platform = currentPlatform) {
       ctx.fillText(text, 540, 1670);
     }
 
-    // Both platforms Phase 1: Row 2 "（最後に解説あり）" centered underneath in gold
+    // Both platforms Phase 1: Row 2 "（レベル以上の単語は最後に解説）" centered underneath in gold
     ctx.font = "900 48px 'Outfit', 'Noto Sans JP', sans-serif";
     ctx.fillStyle = '#FFD54F'; // Emphasized gold/yellow
     ctx.strokeStyle = '#000000';
     ctx.lineWidth = 12;
     ctx.lineJoin = 'round';
     ctx.textAlign = 'center';
-    ctx.strokeText("（最後に解説あり）", 540, 1795);
-    ctx.fillText("（最後に解説あり）", 540, 1795);
+    ctx.strokeText("（レベル以上の単語は最後に解説）", 540, 1795);
+    ctx.fillText("（レベル以上の単語は最後に解説）", 540, 1795);
 
     // Always restore alignment to center for subsequent drawings
     ctx.textAlign = 'center';
