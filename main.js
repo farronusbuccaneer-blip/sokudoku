@@ -11,7 +11,8 @@ let voiceBuffer = null;
 let bgmName = '';
 let voiceName = '';
 let bgImage = null;
-let bgImageName = '';
+let bgVideo = null;
+let bgMediaName = '';
 
 let audioCtx = null;
 let bgmGainNode = null;
@@ -38,10 +39,16 @@ let exportCancelled = false;
 let currentPlatform = 'instagram'; // 'instagram' or 'youtube'
 
 // DOM Elements
-const markupTextArea = document.getElementById('markupText');
-const bgImageInput = document.getElementById('bgImageInput');
-const bgImageBtn = document.getElementById('bgImageBtn');
-const bgImageInfo = document.getElementById('bgImageInfo');
+const inputTop1 = document.getElementById('inputTop1');
+const inputTop2 = document.getElementById('inputTop2');
+const inputTitle = document.getElementById('inputTitle');
+const inputBottom1 = document.getElementById('inputBottom1');
+const speedReadingTextInput = document.getElementById('speedReadingTextInput');
+const explanationInput = document.getElementById('explanationInput');
+
+const bgMediaInput = document.getElementById('bgMediaInput');
+const bgMediaBtn = document.getElementById('bgMediaBtn');
+const bgMediaInfo = document.getElementById('bgMediaInfo');
 const bgmAudioInput = document.getElementById('bgmAudioInput');
 const bgmAudioBtn = document.getElementById('bgmAudioBtn');
 const bgmAudioInfo = document.getElementById('bgmAudioInfo');
@@ -161,22 +168,40 @@ function adjustVolumeSettings() {
   }
 }
 
-// Parsing Pseudo-Markdown
-function parsePseudoMarkdown(text) {
+// Parse Input Fields (Separated Plain Text + Explanation Markdown)
+function parseInputFields() {
+  const expText = explanationInput ? explanationInput.value.trim() : '';
+  
   const getTag = (tag) => {
     const regex = new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`, 'i');
-    const match = text.match(regex);
+    const match = expText.match(regex);
     return match ? match[1].trim() : '';
   };
 
+  let words = [getTag('word1'), getTag('word2'), getTag('word3')].filter(Boolean);
+  let means = [getTag('mean1'), getTag('mean2'), getTag('mean3')].filter(Boolean);
+
+  // Fallback: if no XML tags, parse markdown bullet points like "- **word**: mean" or "word: mean"
+  if (words.length === 0 && expText) {
+    const lines = expText.split('\n').map(l => l.trim()).filter(Boolean);
+    for (const line of lines) {
+      if (words.length >= 3) break;
+      const match = line.match(/^(?:[-*]\s*)?(?:\*\*)?([^*:\-\n]+)(?:\*\*)?\s*[:\-：]\s*(.*)$/);
+      if (match) {
+        words.push(match[1].trim());
+        means.push(match[2].trim());
+      }
+    }
+  }
+
   parsedTags = {
-    top1: getTag('top1'),
-    top2: getTag('top2'),
-    title: getTag('title'),
-    text: getTag('text'),
-    bottom1: getTag('bottom1'),
-    words: [getTag('word1'), getTag('word2'), getTag('word3')].filter(Boolean),
-    means: [getTag('mean1'), getTag('mean2'), getTag('mean3')].filter(Boolean)
+    top1: inputTop1 ? inputTop1.value.trim() : '',
+    top2: inputTop2 ? inputTop2.value.trim() : '',
+    title: inputTitle ? inputTitle.value.trim() : '',
+    text: speedReadingTextInput ? speedReadingTextInput.value.trim() : '',
+    bottom1: inputBottom1 ? inputBottom1.value.trim() : '',
+    words,
+    means
   };
 }
 
@@ -262,7 +287,7 @@ function wrapText(ctx, text, maxWidth) {
 // Layout Calculation
 function calculateLayout() {
   const ctx = previewCanvas.getContext('2d');
-  parsePseudoMarkdown(markupTextArea.value);
+  parseInputFields();
   
   renderedElements = [];
   
@@ -388,7 +413,7 @@ function calculateLayout() {
 function autoGenerateTimestampsFromVoice() {
   if (!voiceBuffer) return;
   
-  parsePseudoMarkdown(markupTextArea.value);
+  parseInputFields();
   if (!parsedTags.text) return;
   
   const lines = parsedTags.text.split('\n')
@@ -448,9 +473,26 @@ function getScrollOffset(t) {
   return 0;
 }
 
-// Background drawing
-function drawBackgroundImage(ctx, img) {
-  if (!img) {
+// Seek video helper for WebCodecs frame export
+function seekVideoToTime(video, targetTime) {
+  return new Promise((resolve) => {
+    if (!video || !video.duration || Math.abs(video.currentTime - targetTime) < 0.02) {
+      resolve();
+      return;
+    }
+    const onSeeked = () => {
+      video.removeEventListener('seeked', onSeeked);
+      resolve();
+    };
+    video.addEventListener('seeked', onSeeked);
+    video.currentTime = targetTime;
+  });
+}
+
+// Background Media drawing (Image or Looping Video)
+function drawBackgroundMedia(ctx, time = currentTime) {
+  const media = bgVideo || bgImage;
+  if (!media) {
     const grad = ctx.createLinearGradient(0, 0, 0, 1920);
     grad.addColorStop(0, '#0a0d1a');
     grad.addColorStop(0.5, '#161f36');
@@ -459,23 +501,42 @@ function drawBackgroundImage(ctx, img) {
     ctx.fillRect(0, 0, 1080, 1920);
     return;
   }
-  
+
+  let w = 0, h = 0;
+  if (bgVideo) {
+    w = bgVideo.videoWidth;
+    h = bgVideo.videoHeight;
+    if (bgVideo.duration && isFinite(bgVideo.duration) && bgVideo.duration > 0) {
+      const targetTime = time % bgVideo.duration;
+      // Seek video if not already close
+      if (Math.abs(bgVideo.currentTime - targetTime) > 0.05) {
+        bgVideo.currentTime = targetTime;
+      }
+    }
+  } else if (bgImage) {
+    w = bgImage.width;
+    h = bgImage.height;
+  }
+
+  if (!w || !h) return;
+
   const canvasAspect = 1080 / 1920;
-  const imgAspect = img.width / img.height;
-  
+  const mediaAspect = w / h;
+
   let drawW, drawH, drawX, drawY;
-  if (imgAspect > canvasAspect) {
+  if (mediaAspect > canvasAspect) {
     drawH = 1920;
-    drawW = img.width * (1920 / img.height);
+    drawW = w * (1920 / h);
     drawX = (1080 - drawW) / 2;
     drawY = 0;
   } else {
     drawW = 1080;
-    drawH = img.height * (1080 / img.width);
+    drawH = h * (1080 / w);
     drawX = 0;
     drawY = (1920 - drawH) / 2;
   }
-  ctx.drawImage(img, drawX, drawY, drawW, drawH);
+
+  ctx.drawImage(media, drawX, drawY, drawW, drawH);
 }
 
 // Main Draw Canvas Function
@@ -483,7 +544,7 @@ function drawCanvas(time, platform = currentPlatform) {
   const ctx = previewCanvas.getContext('2d');
   
   // Background
-  drawBackgroundImage(ctx, bgImage);
+  drawBackgroundMedia(ctx, time);
   
   const isPhase1 = time < phase1Duration;
   
@@ -750,6 +811,10 @@ async function play() {
   playIcon.style.display = 'none';
   pauseIcon.style.display = 'block';
   
+  if (bgVideo) {
+    bgVideo.play().catch(e => console.warn("Background video play warning:", e));
+  }
+  
   // Start playing audio in sync
   startRealTimeAudio(currentTime);
   
@@ -761,6 +826,10 @@ function pause() {
   isPlaying = false;
   playIcon.style.display = 'block';
   pauseIcon.style.display = 'none';
+  
+  if (bgVideo) {
+    bgVideo.pause();
+  }
   
   if (animationFrameId) {
     cancelAnimationFrame(animationFrameId);
@@ -1162,6 +1231,11 @@ async function exportVideo(platform = currentPlatform) {
       exportStatusText.textContent = `ビデオフレームをレンダリング中... (${frameIndex + 1}/${totalFrames})`;
       exportProgressFill.style.width = `${Math.round((frameIndex / totalFrames) * 100)}%`;
 
+      if (bgVideo && bgVideo.duration > 0) {
+        const bgTime = frameTime % bgVideo.duration;
+        await seekVideoToTime(bgVideo, bgTime);
+      }
+
       // Render the frame onto previewCanvas for the target platform
       drawCanvas(frameTime, platform);
 
@@ -1256,10 +1330,15 @@ if (document.readyState === 'loading') {
   initApp();
 }
 
-// Text Area triggers recalculation
-markupTextArea.addEventListener('input', () => {
-  calculateLayout();
-  drawCanvas(currentTime);
+// Input change listeners
+const textInputElems = [inputTop1, inputTop2, inputTitle, inputBottom1, speedReadingTextInput, explanationInput];
+textInputElems.forEach(input => {
+  if (input) {
+    input.addEventListener('input', () => {
+      calculateLayout();
+      drawCanvas(currentTime);
+    });
+  }
 });
 
 normalDurationInput.addEventListener('input', () => {
@@ -1281,24 +1360,51 @@ tabTimestamp.addEventListener('click', () => {
   switchTab(tabTimestamp, tabNormal, timestampModeSection, normalModeSection);
 });
 
-// File inputs
-bgImageInput.addEventListener('change', (e) => {
+// File inputs (Media Background: Image or Video)
+bgMediaInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (file) {
-    bgImageName = file.name;
-    bgImageInfo.textContent = `読み込み中: ${bgImageName}`;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        bgImage = img;
-        bgImageInfo.textContent = `選択中: ${bgImageName}`;
-        bgImageBtn.classList.add('has-file');
+    bgMediaName = file.name;
+    bgMediaInfo.textContent = `読み込み中: ${bgMediaName}...`;
+    const isVideo = file.type.startsWith('video/') || /\.(mp4|webm|mov|m4v|mkv)$/i.test(bgMediaName);
+    
+    if (isVideo) {
+      const url = URL.createObjectURL(file);
+      const video = document.createElement('video');
+      video.src = url;
+      video.muted = true;
+      video.playsInline = true;
+      video.loop = true;
+      
+      video.onloadeddata = () => {
+        bgVideo = video;
+        bgImage = null;
+        bgMediaInfo.textContent = `選択中 (動画): ${bgMediaName}`;
+        bgMediaBtn.classList.add('has-file');
         drawCanvas(currentTime);
       };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
+      
+      video.onerror = (err) => {
+        console.error("Video load error:", err);
+        alert("動画ファイルの読み込みに失敗しました。");
+        bgMediaInfo.textContent = `エラー: ${bgMediaName}`;
+        bgMediaBtn.classList.remove('has-file');
+      };
+    } else {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          bgImage = img;
+          bgVideo = null;
+          bgMediaInfo.textContent = `選択中 (画像): ${bgMediaName}`;
+          bgMediaBtn.classList.add('has-file');
+          drawCanvas(currentTime);
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
   }
 });
 

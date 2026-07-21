@@ -21,35 +21,49 @@
     <!-- Left Sidebar: Controls -->
     <div class="sidebar">
       
-      <!-- 1. Text Tags Input Card -->
+      <!-- 1. Text Inputs Card -->
       <div class="card">
         <div class="card-title">
-          <span>📝</span> テキスト設定 (疑似Markdown)
+          <span>📝</span> テキスト設定
+        </div>
+        
+        <div class="form-group">
+          <label for="inputTop1">サブタイトル 1 (&lt;top1&gt;)</label>
+          <input type="text" id="inputTop1" value="速読チャレンジ CEFR B1">
         </div>
         <div class="form-group">
-          <label for="markupText">疑似Markdownテキスト</label>
-          <textarea id="markupText" placeholder="XML風タグでテキストを入力してください...">
-<top1>速読チャレンジ CEFR B1</top1>
-<top2>全文読めたら90WPM</top2>
-<title>The Power of Habits</title>
-<text>
-Habits are powerful forces in our lives.
+          <label for="inputTop2">サブタイトル 2 (&lt;top2&gt;)</label>
+          <input type="text" id="inputTop2" value="全文読めたら90WPM">
+        </div>
+        <div class="form-group">
+          <label for="inputTitle">記事タイトル (&lt;title&gt;)</label>
+          <input type="text" id="inputTitle" value="The Power of Habits">
+        </div>
+        <div class="form-group">
+          <label for="inputBottom1">下部CTAテキスト (&lt;bottom1&gt;)</label>
+          <input type="text" id="inputBottom1" value="復習用に保存">
+        </div>
+
+        <div class="form-group">
+          <label for="speedReadingTextInput">📖 速読本文 (プレーンテキスト)</label>
+          <textarea id="speedReadingTextInput" placeholder="速読用の英文テキストをそのまま貼り付けてください...">Habits are powerful forces in our lives.
 They shape our daily routines.
 They determine our long-term outcomes.
 Building good habits takes time.
 It requires consistent effort every day.
 Small actions accumulate over time.
 They lead to massive transformations.
-Start small, stay consistent, and watch your life change.
-</text>
-<bottom1>復習用に保存</bottom1>
-<word1>accumulate</word1>
+Start small, stay consistent, and watch your life change.</textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="explanationInput">💡 単語解説 (マークダウン形式)</label>
+          <textarea id="explanationInput" class="textarea-small" placeholder="単語解説タグを入力してください..."><word1>accumulate</word1>
 <mean1>蓄積する、積み重なる</mean1>
 <word2>routine</word2>
 <mean2>日課、お決まりの手順</mean2>
 <word3>transformation</word3>
-<mean3>変化、変形</mean3>
-          </textarea>
+<mean3>変化、変形</mean3></textarea>
         </div>
       </div>
 
@@ -60,14 +74,14 @@ Start small, stay consistent, and watch your life change.
         </div>
         
         <div class="form-group">
-          <label>背景画像 (推奨: 1080x1920)</label>
+          <label>背景画像 / 背景動画 (推奨: 1080x1920)</label>
           <div class="file-input-wrapper">
-            <label for="bgImageInput" class="file-input-btn" id="bgImageBtn">
+            <label for="bgMediaInput" class="file-input-btn" id="bgMediaBtn">
               <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-              <span>背景画像を選択</span>
+              <span>背景メディア (画像/動画) を選択</span>
             </label>
-            <input type="file" id="bgImageInput" accept="image/*">
-            <span class="file-info" id="bgImageInfo">背景画像が未設定です。デフォルトの背景が使用されます。</span>
+            <input type="file" id="bgMediaInput" accept="image/*, video/*">
+            <span class="file-info" id="bgMediaInfo">背景が未設定です。デフォルトの背景が使用されます。</span>
           </div>
         </div>
 
