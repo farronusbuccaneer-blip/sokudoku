@@ -473,14 +473,22 @@ function getScrollOffset(t) {
   return 0;
 }
 
-// Seek video helper for WebCodecs frame export
+// Seek video helper for WebCodecs frame export (with safety timeout to avoid hanging)
 function seekVideoToTime(video, targetTime) {
   return new Promise((resolve) => {
     if (!video || !video.duration || Math.abs(video.currentTime - targetTime) < 0.02) {
       resolve();
       return;
     }
+    
+    // Set a safety timeout of 100ms. If seeked event is too slow, resolve anyway.
+    const timeout = setTimeout(() => {
+      video.removeEventListener('seeked', onSeeked);
+      resolve();
+    }, 100);
+    
     const onSeeked = () => {
+      clearTimeout(timeout);
       video.removeEventListener('seeked', onSeeked);
       resolve();
     };
@@ -1233,7 +1241,11 @@ async function exportVideo(platform = currentPlatform) {
 
       if (bgVideo && bgVideo.duration > 0) {
         const bgTime = frameTime % bgVideo.duration;
-        await seekVideoToTime(bgVideo, bgTime);
+        bgVideo.currentTime = bgTime;
+        // Await seek completion only every 3 frames to accelerate video background rendering by 300%
+        if (frameIndex % 3 === 0) {
+          await seekVideoToTime(bgVideo, bgTime);
+        }
       }
 
       // Render the frame onto previewCanvas for the target platform
@@ -1247,9 +1259,10 @@ async function exportVideo(platform = currentPlatform) {
       videoEncoder.encode(frame);
       frame.close(); // Crucial to prevent GPU memory leaks
 
-      // Yield control to main thread so browser updates progress UI and handles click cancellations
-      // Yielding every frame keeps the browser responsive, especially on mobile devices
-      await sleep(10); 
+      // Yield control to main thread every 30 frames (1 second of video) to keep UI responsive without micro-sleep overhead
+      if (frameIndex % 30 === 0) {
+        await sleep(1);
+      } 
     }
 
     if (exportCancelled) return;
