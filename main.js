@@ -1388,8 +1388,9 @@ bgMediaInput.addEventListener('change', (e) => {
       video.muted = true;
       video.playsInline = true;
       video.loop = true;
+      video.preload = "auto";
       
-      video.onloadeddata = () => {
+      video.onloadedmetadata = () => {
         bgVideo = video;
         bgImage = null;
         bgMediaInfo.textContent = `選択中 (動画): ${bgMediaName}`;
@@ -1398,11 +1399,14 @@ bgMediaInput.addEventListener('change', (e) => {
       };
       
       video.onerror = (err) => {
-        console.error("Video load error:", err);
-        alert("動画ファイルの読み込みに失敗しました。");
+        console.error("Video load error:", err, video.error);
+        const detail = video.error ? `${video.error.message} (Code: ${video.error.code})` : '非対応コーデックまたは破損ファイルです';
+        alert(`動画ファイルの読み込みに失敗しました。\n詳細: ${detail}\n※ブラウザが再生可能なH.264 MP4ファイルを推奨します。`);
         bgMediaInfo.textContent = `エラー: ${bgMediaName}`;
         bgMediaBtn.classList.remove('has-file');
       };
+
+      video.load();
     } else {
       const reader = new FileReader();
       reader.onload = (event) => {
