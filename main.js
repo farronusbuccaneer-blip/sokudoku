@@ -498,7 +498,7 @@ function seekVideoToTime(video, targetTime) {
 }
 
 // Background Media drawing (Image or Looping Video)
-function drawBackgroundMedia(ctx, time = currentTime) {
+function drawBackgroundMedia(ctx, time = currentTime, isExporting = false) {
   const media = bgVideo || bgImage;
   if (!media) {
     const grad = ctx.createLinearGradient(0, 0, 0, 1920);
@@ -514,7 +514,8 @@ function drawBackgroundMedia(ctx, time = currentTime) {
   if (bgVideo) {
     w = bgVideo.videoWidth;
     h = bgVideo.videoHeight;
-    if (bgVideo.duration && isFinite(bgVideo.duration) && bgVideo.duration > 0) {
+    // Only seek automatically during real-time preview (not during frame-by-frame export)
+    if (!isExporting && bgVideo.duration && isFinite(bgVideo.duration) && bgVideo.duration > 0) {
       const targetTime = time % bgVideo.duration;
       // Seek video if not already close
       if (Math.abs(bgVideo.currentTime - targetTime) > 0.05) {
@@ -548,11 +549,11 @@ function drawBackgroundMedia(ctx, time = currentTime) {
 }
 
 // Main Draw Canvas Function
-function drawCanvas(time, platform = currentPlatform) {
+function drawCanvas(time, platform = currentPlatform, isExporting = false) {
   const ctx = previewCanvas.getContext('2d');
   
   // Background
-  drawBackgroundMedia(ctx, time);
+  drawBackgroundMedia(ctx, time, isExporting);
   
   const isPhase1 = time < phase1Duration;
   
@@ -1241,15 +1242,14 @@ async function exportVideo(platform = currentPlatform) {
 
       if (bgVideo && bgVideo.duration > 0) {
         const bgTime = frameTime % bgVideo.duration;
-        bgVideo.currentTime = bgTime;
-        // Await seek completion only every 3 frames to accelerate video background rendering by 300%
-        if (frameIndex % 3 === 0) {
+        // Only seek and await seek completion every 2 frames to prevent overwhelming the decoder
+        if (frameIndex % 2 === 0) {
           await seekVideoToTime(bgVideo, bgTime);
         }
       }
 
-      // Render the frame onto previewCanvas for the target platform
-      drawCanvas(frameTime, platform);
+      // Render the frame onto previewCanvas for the target platform (mark isExporting = true)
+      drawCanvas(frameTime, platform, true);
 
       // Create VideoFrame
       const timestampUs = Math.round(frameTime * 1000000);
