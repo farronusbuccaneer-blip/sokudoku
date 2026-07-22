@@ -1242,10 +1242,8 @@ async function exportVideo(platform = currentPlatform) {
 
       if (bgVideo && bgVideo.duration > 0) {
         const bgTime = frameTime % bgVideo.duration;
-        // Only seek and await seek completion every 2 frames to prevent overwhelming the decoder
-        if (frameIndex % 2 === 0) {
-          await seekVideoToTime(bgVideo, bgTime);
-        }
+        // Seek on every frame to ensure a perfectly smooth 30 fps background video
+        await seekVideoToTime(bgVideo, bgTime);
       }
 
       // Render the frame onto previewCanvas for the target platform (mark isExporting = true)
