@@ -514,10 +514,10 @@ function drawBackgroundMedia(ctx, time = currentTime, isExporting = false) {
   if (bgVideo) {
     w = bgVideo.videoWidth;
     h = bgVideo.videoHeight;
-    // Only seek automatically during real-time preview (not during frame-by-frame export)
-    if (!isExporting && bgVideo.duration && isFinite(bgVideo.duration) && bgVideo.duration > 0) {
+    // Only seek background video when PAUSED during preview seekbar interaction.
+    // When playing or exporting, bgVideo plays naturally and loops infinitely via bgVideo.loop = true!
+    if (!isPlaying && !isExporting && bgVideo.duration && isFinite(bgVideo.duration) && bgVideo.duration > 0) {
       const targetTime = time % bgVideo.duration;
-      // Seek video if not already close
       if (Math.abs(bgVideo.currentTime - targetTime) > 0.05) {
         bgVideo.currentTime = targetTime;
       }
@@ -820,7 +820,8 @@ async function play() {
   playIcon.style.display = 'none';
   pauseIcon.style.display = 'block';
   
-  if (bgVideo) {
+  if (bgVideo && bgVideo.duration > 0) {
+    bgVideo.currentTime = currentTime % bgVideo.duration;
     bgVideo.play().catch(e => console.warn("Background video play warning:", e));
   }
   
@@ -889,6 +890,9 @@ function stopRealTimeAudio() {
 // Seek Timeline
 function seekTo(time) {
   currentTime = Math.max(0, Math.min(time, totalDuration));
+  if (bgVideo && bgVideo.duration > 0) {
+    bgVideo.currentTime = currentTime % bgVideo.duration;
+  }
   drawCanvas(currentTime);
   updateTimeDisplay();
   
@@ -1233,18 +1237,17 @@ async function exportVideo(platform = currentPlatform) {
     const fps = 30;
     const totalFrames = Math.ceil(totalDuration * fps);
     
+    if (bgVideo) {
+      bgVideo.currentTime = 0;
+      await bgVideo.play().catch(e => console.warn("Background video export play warning:", e));
+    }
+
     for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
       if (exportCancelled) return;
 
       const frameTime = frameIndex / fps;
       exportStatusText.textContent = `ビデオフレームをレンダリング中... (${frameIndex + 1}/${totalFrames})`;
       exportProgressFill.style.width = `${Math.round((frameIndex / totalFrames) * 100)}%`;
-
-      if (bgVideo && bgVideo.duration > 0) {
-        const bgTime = frameTime % bgVideo.duration;
-        // Seek on every frame to ensure a perfectly smooth 30 fps background video
-        await seekVideoToTime(bgVideo, bgTime);
-      }
 
       // Render the frame onto previewCanvas for the target platform (mark isExporting = true)
       drawCanvas(frameTime, platform, true);
@@ -1257,10 +1260,12 @@ async function exportVideo(platform = currentPlatform) {
       videoEncoder.encode(frame);
       frame.close(); // Crucial to prevent GPU memory leaks
 
-      // Yield control to main thread every 30 frames (1 second of video) to keep UI responsive without micro-sleep overhead
-      if (frameIndex % 30 === 0) {
+      // Pace frame generation: 33ms when background video is playing, fast yield when image/gradient
+      if (bgVideo) {
+        await sleep(33);
+      } else if (frameIndex % 30 === 0) {
         await sleep(1);
-      } 
+      }
     }
 
     if (exportCancelled) return;
@@ -1291,6 +1296,9 @@ async function exportVideo(platform = currentPlatform) {
     alert(`エクスポート中にエラーが発生しました: ${error.message}`);
     exportOverlay.classList.remove('active');
   } finally {
+    if (bgVideo) {
+      bgVideo.pause();
+    }
     btnExportInstagram.disabled = false;
     btnExportYoutube.disabled = false;
   }
